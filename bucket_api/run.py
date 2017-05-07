@@ -2,12 +2,10 @@
 from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
 
-from models import User
+from bucket_api.models import db, User
+from bucket_api.config import app_config
+from bucket_api.app import create_app
 
-from config import app_config
-
-from __init__ import create_app
-from models import db
 
 app = create_app(app_config['development'])
 
