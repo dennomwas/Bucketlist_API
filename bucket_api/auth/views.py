@@ -10,7 +10,25 @@ user_schema = UserSchema()
 auth_api = Api(auth_blueprint)
 
 
+@auth.verify_password
+def verify_user_password(username, password):
+    user = User.query.filter_by(username=username).first()
 
+    if not user or not user.verify_password(password):
+        return False
+    g.user = user
+    return True
+
+@tokenization.verify_token
+def verify_token(token):
+
+    user = User.verify_auth_token(token)
+
+    if not user:
+        return False
+
+    g.user = user
+    return True
 
 class AuthRequiredResource(Resource):
     method_decorators = [tokenization.login_required]
@@ -50,6 +68,11 @@ class RegisterResource(Resource):
             return {'error': username + ' not registered, check your details and try again!'}
 
 
+class RegisteredUsersResource(AuthRequiredResource):
+    def get(self, user_id):
+        users = User.query.get(id)
+        all_users = user_schema.dump(users).data
+        return all_users
 
 class LoginResource(Resource):
     def post(self):
