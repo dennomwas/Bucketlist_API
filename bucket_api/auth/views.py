@@ -12,4 +12,10 @@ auth_api = Api(auth_blueprint)
 
 
 
+auth_api.add_resource(RegisterResource, '/register/')
+auth_api.add_resource(RegisteredUsersResource, '/users')
+auth_api.add_resource(LoginResource, '/login/')
+
+
+
 
