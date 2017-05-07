@@ -4,9 +4,9 @@ from flask_restful import Api, Resource
 from sqlalchemy.exc import SQLAlchemyError
 # import status
 
-from models import db, User, BucketList, BucketListsSchema, BucketItems, BucketItemsSchema
-from pagination import ResourcePagination
-from auth.views import AuthRequiredResource
+from bucket_api.models import db, User, BucketList, BucketListsSchema, BucketItems, BucketItemsSchema
+from bucket_api.pagination import ResourcePagination
+from bucket_api.auth.views import AuthRequiredResource
 
 
 bucket_blueprint = Blueprint('bucket_blueprint', __name__)
@@ -70,17 +70,21 @@ class BucketResource(AuthRequiredResource):
 
     def get(self, id):
 
-        try:
-            one_bucket = BucketList.query.get(id)
+        q = request.args.get('q')
 
-            if not one_bucket:
-                return {'error': 'The Bucket does not exist'}, 404
+        if q:
+            search_results = BucketList.query.filter_by(created_by=g.user.user_id).filter(BucketList.bucket_name.like('%' + q + '%')).all()
+            return search_results
 
-            one_bucket = bucket_list_schema.dump(one_bucket).data
-            return one_bucket
+        else:
+            resource_pagination = ResourcePagination(request,
+                                                     query=BucketList.query,
+                                                     resource_for_url='bucket_blueprint.all_bucketlists',
+                                                     key_name='results',
+                                                     schema=bucket_list_schema)
+            bucket_results = resource_pagination.paginate_buckets()
+            return bucket_results
 
-        except:
-            return {'error': 'Check your details and try again!'}
 
     def delete(self, id):
         try:
