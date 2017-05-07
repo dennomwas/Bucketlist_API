@@ -11,6 +11,11 @@ auth_api = Api(auth_blueprint)
 
 
 
+
+class AuthRequiredResource(Resource):
+    method_decorators = [tokenization.login_required]
+
+
 class RegisterResource(Resource):
     def post(self):
 
@@ -44,6 +49,33 @@ class RegisterResource(Resource):
             db.session.rollback()
             return {'error': username + ' not registered, check your details and try again!'}
 
+
+
+class LoginResource(Resource):
+    def post(self):
+        login_details = request.get_json()
+
+        if not login_details:
+            return {'error': 'No input provided'}, 400
+
+        validate_user_errors = user_schema.validate(login_details)
+        if validate_user_errors:
+            return {'error': 'Check your fields and try again!'}, 400
+
+        username = login_details.get('username')
+        password = login_details.get('password')
+
+        user_login = User.query.filter_by(username=username).first()
+
+        if user_login and verify_user_password(username, password):
+
+            token = user_login.generate_auth_token()
+
+            user_login = user_schema.dump(user_login).data
+            return {'user_login': user_login,
+                    'token': token.decode('ascii')}, 201
+
+        return {'error': 'Incorrect Username or Password'}, 400
 
 
 auth_api.add_resource(RegisterResource, '/register/')
