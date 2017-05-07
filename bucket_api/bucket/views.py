@@ -70,21 +70,17 @@ class BucketResource(AuthRequiredResource):
 
     def get(self, id):
 
-        q = request.args.get('q')
+        try:
+            one_bucket = BucketList.query.get(id)
 
-        if q:
-            search_results = BucketList.query.filter_by(created_by=g.user.user_id).filter(BucketList.bucket_name.like('%' + q + '%')).all()
-            return search_results
+            if not one_bucket:
+                return {'error': 'The Bucket does not exist'}, 404
 
-        else:
-            resource_pagination = ResourcePagination(request,
-                                                     query=BucketList.query,
-                                                     resource_for_url='bucket_blueprint.all_bucketlists',
-                                                     key_name='results',
-                                                     schema=bucket_list_schema)
-            bucket_results = resource_pagination.paginate_buckets()
-            return bucket_results
+            one_bucket = bucket_list_schema.dump(one_bucket).data
+            return one_bucket
 
+        except:
+            return {'error': 'Check your details and try again!'}
 
     def delete(self, id):
         try:
