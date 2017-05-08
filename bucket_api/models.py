@@ -10,9 +10,10 @@ from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
 
-from config import *
+from bucket_api.config import Config
+from bucket_api import db
 
-db = SQLAlchemy()
+# db = SQLAlchemy()
 marshmallow = Marshmallow()
 auth = HTTPBasicAuth()
 tokenization = HTTPTokenAuth()
