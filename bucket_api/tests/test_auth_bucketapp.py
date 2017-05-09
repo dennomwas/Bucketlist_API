@@ -1,95 +1,79 @@
-import unittest
-from flask import json, url_for
-from bucket_api.models import db
-# from bucket_api.app import create_app
-from bucket_api.config import app_config
-from bucket_api.models import User, BucketList, BucketItems
+from flask import json
+from bucket_api.tests.Basetest import AuthTest
 
 
-class AuthTest(unittest.TestCase):
-    def setUp(self):
-        self.app = app_config('testing')
-        self.client = self.app.test_client()
-        self.app_context = self.app.app_context()
-        self.app_context.push()
-        db.create_all()
+class AuthTesting(AuthTest):
 
-
-        # user registration
-        self.user = {
-            'fullname': 'John Snow',
-            'username': 'john_snow@gmail.com',
-            'password': 'strong1'
+    def headers(self):
+        api_headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
         }
-        # user login
-        self.login = {
-            'username': 'john_snow@gmail.com',
-            'password': 'strong1'
-        }
+        return api_headers
 
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-        self.app_context.pop()
+    def create_user(self):
+        new_user = self.client.post('/auth/register/',
+                                    headers=self.headers(),
+                                    data=json.dumps(self.user))
+        return new_user
 
     def test_register_account(self):
-        response = self.client.post('/auth/register',
-                                    data=json.dumps(self.user))
+        # register new user
+        create_new_user = self.create_user()
 
-        self.assertEqual(response.status_code, 201)
+        # Assert user has been created
+        self.assertEqual(create_new_user.status_code, 201)
 
     def test_user_already_exist(self):
+        # Create user 1
+        registered_user1 = self.create_user()
 
-        user = {
-            'fullname': 'John Snow',
-            'username': 'john_snow@gmail.com',
-            'password': 'strong1'
-        }
-        response = self.client.post('/auth/register',
-                                    data=json.dumps(user))
+        # Create user 2 with same credentials as user 1
+        registered_user2 = self.create_user()
 
-        self.assertEqual(response.status_code, 409)
-        self.assertTrue('Username already exists!' in json.load(response.data))
+        # Assert conflict
+        self.assertEqual(registered_user2.status_code, 409)
 
     def test_login(self):
-        response = self.client.get('/auth/login',
-                                   data=json.dumps(self.login))
 
-        self.assertEqual(response.status_code, 202)
+        # Register the user
+        create_user_response = self.create_user()
+
+        # Login the user
+        login_response = self.client.post('/auth/login/',
+                                          headers=self.headers(),
+                                          data=json.dumps(self.login))
+        # assert successful login
+        self.assertEqual(login_response.status_code, 201)
 
     def test_login_username_missing(self):
-        self.login = {
-            'username': ' ',
-            'password': 'strong1'
-        }
-        response = self.client.get('/auth/login',
-                                   data=json.dumps(self.login))
+        # Register the user
+        register_new_user = self.create_user()
 
-        self.assertEqual(response.status_code, 400)
+        login_no_username = self.client.post('/auth/login/',
+                                             headers=self.headers(),
+                                             data=json.dumps(self.login_no_username))
+        # Assert bad request
+        self.assertEqual(login_no_username.status_code, 400)
 
     def test_login_password_missing(self):
-        self.login = {
-            'username': 'john_snow@gmail.com',
-            'password': ' '
-        }
-        response = self.client.get('/auth/login',
-                                   data=json.dumps(self.login))
+        # Register the user
+        register_new_user = self.create_user()
 
-        self.assertEqual(response.status_code, 400)
+        login_no_password = self.client.post('/auth/login/',
+                                             headers=self.headers(),
+                                             data=json.dumps(self.login_no_password))
+        # Assert bad request
+        self.assertEqual(login_no_password.status_code, 400)
 
     def test_no_username_and_password(self):
-        self.login = {
-            'username': ' ',
-            'password': ' '
-        }
-        response = self.client.get('/auth/login',
-                                   data=json.dumps(self.login))
+        # Register the user
+        register_new_user = self.create_user()
 
-        self.assertEqual(response.status_code, 400)
-
-    def test_logout(self):
-        response = self.client.delete('/auth/logout')
-
-        self.assertEqual(response.status_code, 200)
+        login_no_credentials = self.client.post('/auth/login/',
+                                                headers=self.login_no_credentials,
+                                                data=json.dumps(self.login_no_credentials))
+        # Assert bad request
+        self.assertEqual(login_no_credentials.status_code, 400)
 
 
