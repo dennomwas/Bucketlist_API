@@ -46,11 +46,10 @@ class BucketTesting(BaseTests):
         # generate authentication credentials
         auth_header = self.headers()
         auth_header['Authorization'] = 'Bearer ' + json.loads(user.data.decode())['token']
-        print('the token is {}'.format(auth_header))
 
         # add new bucket item
         new_item = self.client.post('/bucketlists/1/items/',
-                                    headers=self.headers(),
+                                    headers=auth_header,
                                     data=json.dumps(self.new_item))
         print('\n\n\n the new item is {}'.format(new_item))
         return new_item
@@ -74,7 +73,6 @@ class BucketTesting(BaseTests):
 
     def test_update_bucket(self):
         # login user
-
         user = self.login_user()
         self.assertEqual(user.status_code, 201)
 
@@ -86,37 +84,71 @@ class BucketTesting(BaseTests):
         new_bucket = self.create_new_bucket()
 
         bucket_update = self.client.put('/bucketlists/1/',
+                                        header=auth_header,
                                         data=json.dumps(self.new_update))
 
         self.assertEqual(bucket_update.status_code, 201)
 
     def test_delete_bucket(self):
+        # Create user
+        test_user = self.create_user()
 
-        # create new bucket
-        new_bucket = self.create_new_bucket()
-
-        response = self.client.delete('/bucketlists/1',
-                                      data=json.dumps(self.new_bucket))
-
-        self.assertEqual(response.status_code, 301)
-
-    def test_search_bucket(self):
         # login user
-
         user = self.login_user()
         self.assertEqual(user.status_code, 201)
 
         # generate authentication credentials
         auth_header = self.headers()
         auth_header['Authorization'] = 'Bearer ' + json.loads(user.data.decode())['token']
+
         # create new bucket
         new_bucket = self.create_new_bucket()
 
-        response = self.client.get('/bucketlists?q=camp',
-                                   data=json.dumps(self.new_bucket))
+        response = self.client.delete('/bucketlists/1',
+                                      headers=auth_header,
+                                      data=json.dumps(self.new_bucket))
 
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 301)
 
+    def test_create_a_new_item(self):
+        # create new bucket
+        new_bucket = self.create_new_bucket()
 
+        # create new bucket item
+        new_bucket_item = self.create_new_item()
 
+        # assert bucket created
+        self.assertEqual(new_bucket_item.status_code, 200)
+
+    # def test_update_item(self):
+    #     # create new bucket item
+    #     new_bucket_item = self.create_new_item()
+    #
+    #     # update the item
+    #     item_update = self.client.put('/bucketlists/1',
+    #                                   data=json.dumps(self.new_update1))
+    #     # assert update successful
+    #     self.assertEqual(item_update.status_code, 201)
+    #
+    # def test_view_all_buckets(self):
+    #     # Create user
+    #     test_user = self.create_user()
+    #
+    #     # login user
+    #     user = self.login_user()
+    #     self.assertEqual(user.status_code, 201)
+    #
+    #     # generate authentication credentials
+    #     auth_header = self.headers()
+    #     auth_header['Authorization'] = 'Bearer ' + json.loads(user.data.decode())['token']
+    #
+    #     response = self.client.get('/bucketlists/',
+    #                                headers=auth_header)
+    #
+    #     self.assertEqual(response.status_code, 200)
+
+    def test_delete_item(self):
+        response = self.client.delete('/bucketlists/10')
+
+        self.assertEqual(response.status_code, 301)
 

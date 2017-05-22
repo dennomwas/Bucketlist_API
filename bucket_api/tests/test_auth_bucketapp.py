@@ -1,15 +1,8 @@
 from flask import json
-from bucket_api.tests.Basetest import AuthTest
+from bucket_api.tests.Basetest import BaseTests
 
 
-class AuthTesting(AuthTest):
-
-    def headers(self):
-        api_headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        }
-        return api_headers
+class AuthTesting(BaseTests):
 
     def create_user(self):
         new_user = self.client.post('/auth/register/',
@@ -24,7 +17,7 @@ class AuthTesting(AuthTest):
         # Assert user has been created
         self.assertEqual(create_new_user.status_code, 201)
 
-    def test_user_already_exist(self):
+    def test_register_account_already_exist(self):
         # Create user 1
         registered_user1 = self.create_user()
 

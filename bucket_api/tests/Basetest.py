@@ -5,7 +5,7 @@ from bucket_api import create_app
 from bucket_api.models import User, BucketList, BucketItems
 
 
-class AuthTest(unittest.TestCase):
+class BaseTests(unittest.TestCase):
     def setUp(self):
         self.app = create_app('testing')
         self.client = self.app.test_client()
@@ -43,6 +43,48 @@ class AuthTest(unittest.TestCase):
             'username': '',
             'password': ''
         }
+
+        # add a bucket
+        self.new_bucket = {
+            'bucket_id': 1,
+            'bucket_name': 'Camping',
+            'date_created': '2016-08-12 11:57:23',
+            'date_modified': '2017-08-12 11:57:23',
+            'created_by': 'False'
+        }
+
+        # update a bucket list
+        self.new_update = {
+            'bucket_id': 1,
+            'bucket_name': 'Go to Nairobi'
+        }
+
+        # add a bucket item
+        self.new_item = {
+            'item_id': 1,
+            'item_name': 'Camping',
+            'date_created': '2016-08-12 11:57:23',
+            'date_modified': '2017-08-12 11:57:23',
+            'status': 'False'
+        }
+
+        self.search_name = {
+            'name': 'camping'
+        }
+        # Update a bucket item
+        self.new_update2 = {
+            'item_id': 1,
+            'item_name': 'Learn to Swim'
+
+        }
+
+    def headers(self):
+        api_headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+        return api_headers
+
 
     def tearDown(self):
         db.session.remove()
