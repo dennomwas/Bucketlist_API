@@ -80,7 +80,6 @@ class RegisterResource(Resource):
 
 class LoginResource(Resource):
     def post(self):
-        # login in an already registered user
 
         # get user login details
         login_details = request.get_json()
