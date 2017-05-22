@@ -1,77 +1,122 @@
-import unittest
 from flask import json
-from bucket_api.models import db
-# from bucket_api.app import create_app
-from bucket_api.config import app_config
-from bucket_api.models import User, BucketList, BucketItems
+from bucket_api.tests.Basetest import BaseTests
 
 
-class BucketTest(unittest.TestCase):
-    def setUp(self):
-        self.app = app_config('testing')
-        self.app_context = self.app.app_context()
-        self.app_context.push()
-        db.create_all()
-        self.client = self.app.test_client()
+class BucketTesting(BaseTests):
 
-        # add a bucket
-        self.new_bucket = {
-            'item_id': 1,
-            'item_name': 'Camping',
-            'date_created': '2016-08-12 11:57:23',
-            'date_modified': '2017-08-12 11:57:23',
-            'created_by': 'False'
-        }
+    def create_user(self):
+        new_user = self.client.post('/auth/register/',
+                                    headers=self.headers(),
+                                    data=json.dumps(self.user))
+        return new_user
 
-        # add a bucket item
-        self.new_item = {
-            'item_id': 1,
-            'item_name': 'Camping',
-            'date_created': '2016-08-12 11:57:23',
-            'date_modified': '2017-08-12 11:57:23',
-            'status': 'False'
-        }
+    def login_user(self):
+        user_login = self.client.post('auth/login/',
+                                      headers=self.headers(),
+                                      data=json.dumps(self.login))
+        return user_login
 
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-        self.app_context.pop()
+    def create_new_bucket(self):
+        # Create user
+        test_user = self.create_user()
+
+        # login user
+        user = self.login_user()
+        self.assertEqual(user.status_code, 201)
+
+        # generate authentication credentials
+        auth_header = self.headers()
+        auth_header['Authorization'] = 'Bearer ' + json.loads(user.data.decode())['token']
+
+        # Add a new bucket
+        new_bucket = self.client.post('/bucketlists/',
+                                      headers=auth_header,
+                                      data=json.dumps(self.new_bucket))
+        return new_bucket
+
+    def create_new_item(self):
+        # Create user
+        test_user = self.create_user()
+
+        # login user
+        user = self.login_user()
+        self.assertEqual(user.status_code, 201)
+        print('user login {}'.format(user))
+
+        # generate authentication credentials
+        auth_header = self.headers()
+        auth_header['Authorization'] = 'Bearer ' + json.loads(user.data.decode())['token']
+        print('the token is {}'.format(auth_header))
+
+        # add new bucket item
+        new_item = self.client.post('/bucketlists/1/items/',
+                                    headers=self.headers(),
+                                    data=json.dumps(self.new_item))
+        print('\n\n\n the new item is {}'.format(new_item))
+        return new_item
 
     def test_create_a_new_bucket(self):
+        # create new bucket
+        new_bucket = self.create_new_bucket()
 
-        response = self.client.post('/bucketlists/',
-                                    data=json.dumps(self.new_bucket))
+        # assert bucket created
+        self.assertEqual(new_bucket.status_code, 201)
 
-        self.assertEqual(response.status_code, 201)
+    def test_create_duplicate_bucket(self):
+        # create new bucket
+        new_bucket1 = self.create_new_bucket()
 
-    def test_create_a_new_item(self):
+        # create duplicate bucket
+        new_bucket2 = self.create_new_bucket()
 
-        response = self.client.post('/bucketlists/',
-                                    data=json.dumps(self.new_item))
+        # assert bucket created
+        self.assertEqual(new_bucket2.status_code, 409)
 
-        self.assertEqual(response.status_code, 201)
+    def test_update_bucket(self):
+        # login user
 
-    def test_update_item(self):
-        new_update = {
-            'item_id': 1,
-            'item_name': 'Learn to Swim'
+        user = self.login_user()
+        self.assertEqual(user.status_code, 201)
 
-        }
-        response = self.client.put('/bucketlists/1',
-                                   data=json.dumps(new_update))
+        # generate authentication credentials
+        auth_header = self.headers()
+        auth_header['Authorization'] = 'Bearer ' + json.loads(user.data.decode())['token']
 
-        self.assertEqual(response.status_code, 201)
+        # create new bucket
+        new_bucket = self.create_new_bucket()
 
-    def test_view_all_items(self):
-        response = self.client.get('/bucketlists/')
+        bucket_update = self.client.put('/bucketlists/1/',
+                                        data=json.dumps(self.new_update))
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(bucket_update.status_code, 201)
 
-    def test_delete_item(self):
-        response = self.client.delete('/bucketlists/10')
+    def test_delete_bucket(self):
 
-        self.assertEqual(response.status_code, 200)
+        # create new bucket
+        new_bucket = self.create_new_bucket()
+
+        response = self.client.delete('/bucketlists/1',
+                                      data=json.dumps(self.new_bucket))
+
+        self.assertEqual(response.status_code, 301)
+
+    def test_search_bucket(self):
+        # login user
+
+        user = self.login_user()
+        self.assertEqual(user.status_code, 201)
+
+        # generate authentication credentials
+        auth_header = self.headers()
+        auth_header['Authorization'] = 'Bearer ' + json.loads(user.data.decode())['token']
+        # create new bucket
+        new_bucket = self.create_new_bucket()
+
+        response = self.client.get('/bucketlists?q=camp',
+                                   data=json.dumps(self.new_bucket))
+
+        self.assertEqual(response.status_code, 302)
 
 
-if __name__ == '__main__':
-    unittest.main()
+
+
