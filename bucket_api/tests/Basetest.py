@@ -56,8 +56,8 @@ class BaseTests(unittest.TestCase):
         # update a bucket list
         self.new_update = {
             'bucket_id': 1,
-            'bucket_name': 'Go to Nairobi',
-            'date_modified': '2017-08-12 11:57:23',
+            'bucket_name': 'Go to Nairobi'
+
         }
 
         # add a bucket item
@@ -74,9 +74,7 @@ class BaseTests(unittest.TestCase):
         }
         # Update a bucket item
         self.new_update2 = {
-            'item_id': 1,
             'item_name': 'Learn to Swim'
-
         }
 
     def headers(self):
