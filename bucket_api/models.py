@@ -11,9 +11,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
 
 from bucket_api.config import Config
-from bucket_api import db
 
-# db = SQLAlchemy()
+db = SQLAlchemy()
 marshmallow = Marshmallow()
 auth = HTTPBasicAuth()
 tokenization = HTTPTokenAuth()
@@ -60,7 +59,7 @@ class User(db.Model, AddUpdateDelete):
 
         return check_password_hash(self.password_hash, password)
 
-    def generate_auth_token(self, expiration=2):
+    def generate_auth_token(self, expiration=43200):
 
         s = Serializer(Config.SECRET_KEY, expires_in=expiration)
         return s.dumps({'id': self.user_id})
@@ -77,8 +76,9 @@ class User(db.Model, AddUpdateDelete):
         except BadSignature:
             return {'error': 'Invalid token, Please log in again!'}
 
-        g.user = User.query.get(data['id'])
-        return g.user
+        user = User.query.get(data['id'])
+
+        return user
 
     def __repr__(self):
         return '<User: {}>'.format(self.fullname)
@@ -118,23 +118,25 @@ class BucketItems(db.Model, AddUpdateDelete):
 
 class UserSchema(marshmallow.Schema):
     user_id = fields.Integer(dump_only=True)
-    fullname = fields.String(validate=validate.Length(3))
+    fullname = fields.String(validate=validate.Length(min=3))
     username = fields.String(required=True, validate=validate.Length(3, error='Field cannot be blank'))
     date_created = fields.DateTime()
 
 
 class BucketListsSchema(marshmallow.Schema):
     bucket_id = fields.Integer(dump_only=True)
-    bucket_name = fields.String(required=True, validate=validate.Length(3))
-    bucket_items = fields.Nested('BucketItemsSchema', many=True)
-    date_created = fields.DateTime()
-    date_modified = fields.DateTime()
+    bucket_name = fields.String(required=True, validate=validate.Length(min=3))
+    bucket_items = fields.Nested('BucketItemsSchema', dump_only=True, many=True)
+    created_by = fields.Integer(dump_only=True, error_messages={'required': 'hfgshjfhbhsjd'})
+    date_created = fields.DateTime(dump_only=True)
+    date_modified = fields.DateTime(dump_only=True)
 
 
 class BucketItemsSchema(marshmallow.Schema):
     item_id = fields.Integer(dump_only=True)
-    item_name = fields.String(required=True, validate=validate.Length(3))
-    status = fields.Boolean(required=True, default=False)
+    item_name = fields.String(validate=validate.Length(min=1))
+    status = fields.Boolean(default=False)
     date_created = fields.DateTime()
     date_modified = fields.DateTime()
+
 

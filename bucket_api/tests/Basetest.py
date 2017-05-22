@@ -50,13 +50,14 @@ class BaseTests(unittest.TestCase):
             'bucket_name': 'Camping',
             'date_created': '2016-08-12 11:57:23',
             'date_modified': '2017-08-12 11:57:23',
-            'created_by': 'False'
+            'created_by': '1'
         }
 
         # update a bucket list
         self.new_update = {
             'bucket_id': 1,
-            'bucket_name': 'Go to Nairobi'
+            'bucket_name': 'Go to Nairobi',
+            'date_modified': '2017-08-12 11:57:23',
         }
 
         # add a bucket item

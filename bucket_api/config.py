@@ -13,13 +13,12 @@ class Config(object):
         .format(DB_USER="mwas", DB_PASS="", DB_ADDR="127.0.0.1", DB_NAME="bucketlist_db")
 
 
-
 class DevelopmentConfig(Config):
     """ Development configurations"""
 
     DEBUG = True
     SQLALCHEMY_ECHO = True
-    PAGINATION_PAGE_SIZE = 5
+    PAGINATION_PAGE_SIZE = 10
     PAGINATION_PAGE_ARGUMENT_NAME = 'page'
 
 
@@ -32,6 +31,8 @@ class ProductionConfig(Config):
 
 class TestingConfig(Config):
     """ Testing configurations"""
+    SQLALCHEMY_DATABASE_URI = "postgresql://{DB_USER}: {DB_PASS}@{DB_ADDR}/{DB_NAME}" \
+        .format(DB_USER="mwas", DB_PASS="", DB_ADDR="127.0.0.1", DB_NAME="test_db")
 
 
 app_config = {

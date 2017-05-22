@@ -130,22 +130,22 @@ class BucketTesting(BaseTests):
     #     # assert update successful
     #     self.assertEqual(item_update.status_code, 201)
     #
-    # def test_view_all_buckets(self):
-    #     # Create user
-    #     test_user = self.create_user()
-    #
-    #     # login user
-    #     user = self.login_user()
-    #     self.assertEqual(user.status_code, 201)
-    #
-    #     # generate authentication credentials
-    #     auth_header = self.headers()
-    #     auth_header['Authorization'] = 'Bearer ' + json.loads(user.data.decode())['token']
-    #
-    #     response = self.client.get('/bucketlists/',
-    #                                headers=auth_header)
-    #
-    #     self.assertEqual(response.status_code, 200)
+    def test_view_all_buckets(self):
+        # Create user
+        test_user = self.create_user()
+
+        # login user
+        user = self.login_user()
+        self.assertEqual(user.status_code, 201)
+
+        # generate authentication credentials
+        auth_header = self.headers()
+        auth_header['Authorization'] = 'Bearer ' + json.loads(user.data.decode())['token']
+
+        response = self.client.get('/bucketlists/',
+                                   headers=auth_header)
+
+        self.assertEqual(response.status_code, 200)
 
     def test_delete_item(self):
         response = self.client.delete('/bucketlists/10')
