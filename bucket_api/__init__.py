@@ -29,5 +29,3 @@ def create_app(config_filename):
     app.register_blueprint(bucket_blueprint, url_prefix='/bucketlists')
 
     return app
-
-
