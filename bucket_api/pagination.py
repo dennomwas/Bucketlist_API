@@ -1,4 +1,4 @@
-from flask import url_for, current_app
+from flask import url_for, current_app,request
 
 
 class ResourcePagination():
@@ -12,6 +12,13 @@ class ResourcePagination():
         self.page_name = current_app.config['PAGINATION_PAGE_ARGUMENT_NAME']
 
     def paginate_buckets(self):
+
+        limit = request.args.get('limit', type=int)
+        if limit:
+            self.min_results_per_page = limit
+        else:
+            self.max_results_per_page = limit
+
         page_number = self.request.args.get(self.page_name, 1, type=int)
         paginated_objects = self.query.paginate(page_number, per_page=self.results_per_page, error_out=False)
         objects = paginated_objects.items
