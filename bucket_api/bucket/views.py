@@ -70,7 +70,7 @@ class BucketListResource(AuthRequiredResource):
                 BucketList.bucket_name.ilike('%' + search_name + '%'))
 
             if not search_results.count():
-                return {'error': 'No results found'}
+                return {'error': 'No results found'}, 404
 
             return bucket_list_schema.dump(search_results)
 
@@ -116,13 +116,14 @@ class BucketResource(AuthRequiredResource):
             # delete the item found
             bucket.delete(bucket)
 
-            return {'message': '{} successfully deleted'.format(bucket)}, 301
+            return {'message': '{} successfully deleted'.format(bucket)}, 200
 
         except:
             db.session.rollback()
             return {'error': 'Unable to Delete'}, 200
 
     def put(self, id):
+
         # get item from database by id
         bucket = BucketList.query.get(id)
 
@@ -174,7 +175,7 @@ class BucketItemsResource(AuthRequiredResource):
         existing_item = BucketItems.query.filter_by(item_name=item_name).first()
 
         if existing_item:
-            return {'error': 'Item already exists'}
+            return {'error': 'Item already exists'}, 409
         try:
             # post the new item to db
             new_item = BucketItems()
@@ -183,11 +184,11 @@ class BucketItemsResource(AuthRequiredResource):
 
             db.session.add(new_item)
             db.session.commit()
-            return {'message': '{} saved successfully'.format(item_name)}
+            return {'message': '{} saved successfully'.format(item_name)}, 201
 
-        except SQLAlchemyError as error:
+        except Exception as error:
             db.session.rollback()
-            return {'message': '{} not saved, Please try again!'.format(item_name)},
+            return {'message': '{} not saved, Please try again!'.format(item_name)}, 400
 
     def get(self, id):
         # gets all items from the database
@@ -196,13 +197,13 @@ class BucketItemsResource(AuthRequiredResource):
             bucket_items = BucketItems.query.filter_by(bucket_list_id=id)
 
             if not bucket_items.count():
-                return {'error': 'There are no Items to display'}, 200
+                return {'error': 'There are no Items to display'}, 404
 
             response_items = bucket_items_schema.dump(bucket_items, many=True)
             return response_items
 
         except Exception as e:
-            return {'error': 'Check details and try again!'}
+            return {'error': 'Check details and try again!'}, 400
 
 class ItemsResource(AuthRequiredResource):
 
@@ -214,13 +215,13 @@ class ItemsResource(AuthRequiredResource):
                 single_item = BucketItems.query.get(item_id)
 
                 if not single_item:
-                    return {'error': 'Item not found'}, 200
+                    return {'error': 'Item not found'}, 404
 
                 single_item = bucket_items_schema.dump(single_item)
                 return single_item
 
         except Exception as e:
-            return {'error': 'Check details and try again!'}
+            return {'error': 'Check details and try again!'}, 400
 
     def delete(self, id, item_id):
         # deletes a single item from the database
@@ -232,15 +233,14 @@ class ItemsResource(AuthRequiredResource):
                 return {'error': 'The item does not exist'}, 404
 
             item.delete(item)
-            return {'message': ' Item deleted successfully'}, 301
+            return {'message': ' Item deleted successfully'}, 200
 
         except Exception as error:
             db.session.rollback()
-            return {'error': 'Unable to delete Item'}, 200
+            return {'error': 'Unable to delete Item'}, 400
 
     def put(self, id, item_id):
         # updates a single item in the database
-
         # get the item to update
         item_to_update = BucketItems.query.get(item_id)
 
@@ -251,7 +251,7 @@ class ItemsResource(AuthRequiredResource):
         item_update = request.get_json(force=True)
 
         if not item_update:
-            return {'error': 'Invalid input!'}
+            return {'error': 'Invalid input!'}, 400
 
         validate_errors = bucket_items_schema.validate(item_update)
 
@@ -271,11 +271,11 @@ class ItemsResource(AuthRequiredResource):
 
             # persist the update to the database
             item_to_update.update()
-            return {"message": "successfully updated!"}
+            return {"message": "successfully updated!"}, 200
 
-        except SQLAlchemyError as error:
+        except Exception as error:
             db.session.rollback()
-            return {'error': 'Item not updated!'}
+            return {'error': 'Item not updated!'}, 400
 
 
 bucket_api.add_resource(BucketListResource, '/', endpoint='all_bucketlists')
