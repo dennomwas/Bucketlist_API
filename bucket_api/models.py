@@ -127,7 +127,7 @@ class BucketListsSchema(marshmallow.Schema):
     bucket_id = fields.Integer(dump_only=True)
     bucket_name = fields.String(required=True, validate=validate.Length(min=3))
     bucket_items = fields.Nested('BucketItemsSchema', dump_only=True, many=True)
-    created_by = fields.Integer(dump_only=True, error_messages={'required': 'hfgshjfhbhsjd'})
+    created_by = fields.Integer(dump_only=True)
     date_created = fields.DateTime(dump_only=True)
     date_modified = fields.DateTime(dump_only=True)
 
@@ -138,5 +138,3 @@ class BucketItemsSchema(marshmallow.Schema):
     status = fields.Boolean(default=False)
     date_created = fields.DateTime()
     date_modified = fields.DateTime()
-
-
