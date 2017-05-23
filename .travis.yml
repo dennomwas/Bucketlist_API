@@ -16,7 +16,9 @@ before_script:
   - " python run.py db migrate"
   - " python run.py db upgrade"
 
-script: "nosetests --with-coverage"
+script:
+  - "nosetests --with-coverage"
+  - coveralls
 
 services:
   - postgresql
