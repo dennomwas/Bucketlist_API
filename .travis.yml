@@ -5,6 +5,7 @@ python:
 # command to install dependencies
 install:
   - "pip install -r requirements.txt"
+  - "pip install python-coveralls"
 # command to run tests
 cache: false
 before_script:
@@ -16,7 +17,9 @@ before_script:
   - " python run.py db migrate"
   - " python run.py db upgrade"
 
-script: "nosetests --with-coverage"
+script:
+  - "nosetests --with-coverage"
+  - "coveralls"
 
 services:
   - postgresql
