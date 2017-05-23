@@ -3,6 +3,7 @@ from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
 
 from bucket_api import db, create_app
+from bucket_api.models import User
 
 
 app = create_app('development')
