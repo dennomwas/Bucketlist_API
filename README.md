@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/dennomwas/Bucketlist_API.svg?branch=master)](https://travis-ci.org/dennomwas/Bucketlist_API)
+
 [![Coverage Status](https://coveralls.io/repos/github/dennomwas/Bucketlist_API/badge.svg?branch=develop)](https://coveralls.io/github/dennomwas/Bucketlist_API?branch=develop)
 # Bucketlist_API
 
