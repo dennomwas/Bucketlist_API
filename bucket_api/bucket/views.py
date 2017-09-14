@@ -1,13 +1,17 @@
 from flask import Blueprint, request, json, make_response, g
 from flask_restful import Api, Resource
 from sqlalchemy.exc import SQLAlchemyError
+from flask_socketio import emit, send, join_room, leave_room
 
 import datetime
 from bucket_api import add_cors_headers
-from bucket_api.models import db, User, BucketList, BucketListsSchema, BucketItems, BucketItemsSchema
+from bucket_api.models import (db, BucketList,
+                               get_notifications,
+                               BucketListsSchema,
+                               BucketItems, BucketItemsSchema)
 from bucket_api.pagination import ResourcePagination
 from bucket_api.auth.views import AuthRequiredResource
-
+from bucket_api.auth.views.LoginResource import connect_handler
 
 bucket_blueprint = Blueprint('bucket_blueprint', __name__)
 bucket_blueprint.after_request(add_cors_headers)
@@ -16,6 +20,12 @@ bucket_list_schema = BucketListsSchema(many=True)
 single_bucket_list_schema = BucketListsSchema()
 bucket_items_schema = BucketItemsSchema()
 bucket_api = Api(bucket_blueprint)
+
+
+def get_notification(self):
+    emit('response', get_notifications,
+         room=connect_handler,
+         namespace='/notifications')
 
 
 class BucketListResource(AuthRequiredResource):
@@ -34,7 +44,8 @@ class BucketListResource(AuthRequiredResource):
             return {'error': 'Check your fields and try again'}, 400
 
         bucket_name = new_bucket.get('bucket_name')
-        existing_bucket = BucketList.query.filter_by(bucket_name=bucket_name).first()
+        existing_bucket = BucketList.query.filter_by(
+            bucket_name=bucket_name).first()
 
         if existing_bucket:
             return {'error': 'Bucket list already exists'}, 409
@@ -53,7 +64,8 @@ class BucketListResource(AuthRequiredResource):
         except SQLAlchemyError as error:
             print(error)
             db.session.rollback()
-            return {'error': '{} not added, check your details and try again!'.format(bucket_name)}, 400
+            return {'error': '{} not added, check your details and try again!'
+                    .format(bucket_name)}, 400
 
     def get(self):
 
@@ -63,7 +75,8 @@ class BucketListResource(AuthRequiredResource):
         # search and display the buckets found
         if search_name:
 
-            search_results = BucketList.query.filter_by(created_by=g.user.user_id).filter(
+            search_results = BucketList.query.filter_by(
+                created_by=g.user.user_id).filter(
                 BucketList.bucket_name.ilike('%' + search_name + '%'))
 
             if not search_results.count():
@@ -75,7 +88,8 @@ class BucketListResource(AuthRequiredResource):
 
             # display all items
             resource_pagination = ResourcePagination(request,
-                                                     query=BucketList.query.filter_by(created_by=g.user.user_id),
+                                                     query=BucketList.query.filter_by(
+                                                         created_by=g.user.user_id),
                                                      resource_for_url='bucket_blueprint.all_bucketlists',
                                                      key_name='Results',
                                                      schema=bucket_list_schema)
@@ -169,7 +183,8 @@ class BucketItemsResource(AuthRequiredResource):
             return {'error': 'Check your fields and try again'}
 
         item_name = new_item.get('item_name')
-        existing_item = BucketItems.query.filter_by(item_name=item_name).first()
+        existing_item = BucketItems.query.filter_by(
+            item_name=item_name).first()
 
         if existing_item:
             return {'error': 'Item already exists'}, 409
@@ -201,6 +216,7 @@ class BucketItemsResource(AuthRequiredResource):
 
         except Exception as e:
             return {'error': 'Check details and try again!'}, 400
+
 
 class ItemsResource(AuthRequiredResource):
 
@@ -276,6 +292,9 @@ class ItemsResource(AuthRequiredResource):
 
 
 bucket_api.add_resource(BucketListResource, '/', endpoint='all_bucketlists')
-bucket_api.add_resource(BucketResource, '/<int:id>/', endpoint='one_bucketlist')
-bucket_api.add_resource(BucketItemsResource, '/<int:id>/items/', endpoint='all_bucketitems')
-bucket_api.add_resource(ItemsResource, '/<int:id>/items/<int:item_id>/', endpoint='one_bucketitem')
+bucket_api.add_resource(BucketResource, '/<int:id>/',
+                        endpoint='one_bucketlist')
+bucket_api.add_resource(BucketItemsResource,
+                        '/<int:id>/items/', endpoint='all_bucketitems')
+bucket_api.add_resource(
+    ItemsResource, '/<int:id>/items/<int:item_id>/', endpoint='one_bucketitem')

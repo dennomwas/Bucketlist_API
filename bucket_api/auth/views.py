@@ -1,9 +1,11 @@
 from flask import Blueprint, request, jsonify, json, g
 from flask_restful import Api, Resource
 from sqlalchemy.exc import SQLAlchemyError
+from flask_socketio import emit, join_room
 
 from bucket_api import add_cors_headers
 from bucket_api.models import db, auth, tokenization, User, UserSchema
+import socketio
 
 auth_blueprint = Blueprint('auth_blueprint', __name__)
 auth_blueprint.after_request(add_cors_headers)
@@ -112,6 +114,13 @@ class LoginResource(Resource):
                     'user': username,
                     'token': token.decode('ascii')}, 201
         return {'error': 'Incorrect Username or Password'}, 400
+
+        @socketio.on('connect', namespace='/notifications')
+        def connect_handler():
+            if g.user:
+                user_room = 'user_{}'.format(g.user.user_id)
+                join_room(user_room)
+                emit('response', {'data': 'connected'})
 
 
 auth_api.add_resource(RegisterResource, '/register/')

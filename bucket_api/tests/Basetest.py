@@ -48,8 +48,6 @@ class BaseTests(unittest.TestCase):
         self.new_bucket = {
             'bucket_id': 1,
             'bucket_name': 'Camping',
-            'date_created': '2016-08-12 11:57:23',
-            'date_modified': '2017-08-12 11:57:23',
             'created_by': '1'
         }
 
@@ -64,8 +62,6 @@ class BaseTests(unittest.TestCase):
         self.new_item = {
             'item_id': 1,
             'item_name': 'Camping',
-            'date_created': '2016-08-12 11:57:23',
-            'date_modified': '2017-08-12 11:57:23',
             'status': 'False'
         }
 
@@ -84,9 +80,7 @@ class BaseTests(unittest.TestCase):
         }
         return api_headers
 
-
     def tearDown(self):
         db.session.remove()
         db.drop_all()
         self.app_context.pop()
-
